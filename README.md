@@ -17,6 +17,18 @@ El proyecto sigue una arquitectura de **Puertos y Adaptadores (Hexagonal)** divi
 - **`GearChangerCore`**: dominio, puertos (`ShiftInputPort`, `BikeControlOutputPort`), decodificador de tramas ThinkRider VS200, codificador binario OpenBikeControl y orquestador `ShiftBridge` (con *debounce* y pulsos *press/release*). Sin dependencias del sistema operativo; 100 % testeable.
 - **`GearChangerAdapters`**: adaptadores nativos de macOS (`CoreBluetooth` para BLE, `Network.framework` para `_openbikecontrol._tcp`, y `StdinSimulatorAdapter` para pruebas sin hardware).
 - **`GearChangerCLI`**: ejecutable de línea de comandos con los modos `run`, `scan` y `simulate`.
+- **`GearChangerMenuBar`**: app nativa de macOS para la barra de menús (`SwiftUI MenuBarExtra`, sin icono en el Dock) con estado en vivo de BLE/MyWhoosh, botones de prueba y reconexión.
+
+## App en la barra de menús (macOS)
+
+Genera y firma el paquete `dist/GearChanger.app` listo para abrir con doble clic o mover a `/Applications`:
+
+```bash
+./scripts/build-app.sh
+open dist/GearChanger.app
+```
+
+El `Info.plist` del paquete incluye automáticamente `LSUIElement=true` (solo barra de menús) y las declaraciones de permisos de **Bluetooth**, **Red local** y Bonjour (`_openbikecontrol._tcp`).
 
 ## Requisitos
 

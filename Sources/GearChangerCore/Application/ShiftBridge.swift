@@ -12,6 +12,7 @@ public actor ShiftBridge {
     private let logger: any LoggerPort
     private let pulseDuration: Duration
     private let debounceInterval: TimeInterval
+    private let onShift: (@Sendable (ShiftEvent) -> Void)?
 
     private var lastEventTimestamp: Date?
     private var bridgeTask: Task<Void, Never>?
@@ -21,13 +22,15 @@ public actor ShiftBridge {
         output: any BikeControlOutputPort,
         logger: any LoggerPort = ConsoleLogger(),
         pulseDuration: Duration = .milliseconds(50),
-        debounceInterval: TimeInterval = 0.04
+        debounceInterval: TimeInterval = 0.04,
+        onShift: (@Sendable (ShiftEvent) -> Void)? = nil
     ) {
         self.input = input
         self.output = output
         self.logger = logger
         self.pulseDuration = pulseDuration
         self.debounceInterval = debounceInterval
+        self.onShift = onShift
     }
 
     public func start() async throws {
@@ -62,6 +65,7 @@ public actor ShiftBridge {
         let button = OpenBikeControlButton.from(event.action)
         let arrow = event.action == .shiftUp ? "UP (+)" : "DOWN (-)"
         logger.info("Shift \(arrow) -> OpenBikeControl button 0x\(String(format: "%02x", button.rawValue))")
+        onShift?(event)
 
         await output.sendButtonState(button: button, state: .pressed)
         try? await Task.sleep(for: pulseDuration)

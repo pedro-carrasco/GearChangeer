@@ -2,6 +2,12 @@ import Foundation
 import GearChangerCore
 import Network
 
+public enum OpenBikeControlServerStatus: Sendable, Equatable {
+    case stopped
+    case listening(port: UInt16, clientCount: Int)
+    case failed(String)
+}
+
 /// OpenBikeControl TCP + mDNS (Bonjour) output adapter for MyWhoosh.
 ///
 /// Publishes `_openbikecontrol._tcp` via macOS native Network.framework (`NWListener`),
@@ -11,20 +17,24 @@ public final class OpenBikeControlTCPServer: BikeControlOutputPort, @unchecked S
     private let port: UInt16?
     private let codec = OpenBikeControlCodec()
     private let logger: any LoggerPort
+    private let onStatusChange: (@Sendable (OpenBikeControlServerStatus) -> Void)?
     private let queue = DispatchQueue(label: "com.gearchanger.openbikecontrol.tcp")
 
     private var listener: NWListener?
+    private var boundPort: UInt16 = 0
     private var connections: [ObjectIdentifier: NWConnection] = [:]
     private var startContinuation: CheckedContinuation<Void, any Error>?
 
     public init(
         metadata: OpenBikeControlDeviceMetadata = OpenBikeControlDeviceMetadata(),
         port: UInt16? = nil,
-        logger: any LoggerPort = ConsoleLogger()
+        logger: any LoggerPort = ConsoleLogger(),
+        onStatusChange: (@Sendable (OpenBikeControlServerStatus) -> Void)? = nil
     ) {
         self.metadata = metadata
         self.port = port
         self.logger = logger
+        self.onStatusChange = onStatusChange
     }
 
     public func start() async throws {
@@ -59,6 +69,8 @@ public final class OpenBikeControlTCPServer: BikeControlOutputPort, @unchecked S
                         switch state {
                         case .ready:
                             let boundPort = nwListener.port?.rawValue ?? 0
+                            self.boundPort = boundPort
+                            self.onStatusChange?(.listening(port: boundPort, clientCount: self.connections.count))
                             self.logger.info(
                                 "OpenBikeControl server READY on port \(boundPort) | mDNS: \(OpenBikeControlSpec.mdnsServiceType) ('\(self.metadata.name)')"
                             )
@@ -67,6 +79,7 @@ public final class OpenBikeControlTCPServer: BikeControlOutputPort, @unchecked S
                                 cont.resume()
                             }
                         case .failed(let error):
+                            self.onStatusChange?(.failed(error.localizedDescription))
                             self.logger.error("OpenBikeControl listener failed: \(error.localizedDescription)")
                             if let cont = self.startContinuation {
                                 self.startContinuation = nil
@@ -75,6 +88,7 @@ public final class OpenBikeControlTCPServer: BikeControlOutputPort, @unchecked S
                         case .waiting(let error):
                             self.logger.warning("OpenBikeControl listener waiting: \(error.localizedDescription)")
                         case .cancelled:
+                            self.onStatusChange?(.stopped)
                             self.logger.info("OpenBikeControl listener cancelled.")
                         default:
                             break
@@ -105,6 +119,8 @@ public final class OpenBikeControlTCPServer: BikeControlOutputPort, @unchecked S
             self.connections.removeAll()
             self.listener?.cancel()
             self.listener = nil
+            self.boundPort = 0
+            self.onStatusChange?(.stopped)
         }
         logger.info("OpenBikeControl server stopped.")
     }
@@ -137,6 +153,7 @@ public final class OpenBikeControlTCPServer: BikeControlOutputPort, @unchecked S
             guard let self else { return }
             switch state {
             case .ready:
+                self.onStatusChange?(.listening(port: self.boundPort, clientCount: self.connections.count))
                 self.logger.info("Client connected (MyWhoosh): \(endpointDesc) | active clients: \(self.connections.count)")
                 let status = self.codec.encodeDeviceStatus(batteryLevel: 100, connectionState: .connectedReady)
                 self.send(status, to: connection)
@@ -144,9 +161,11 @@ public final class OpenBikeControlTCPServer: BikeControlOutputPort, @unchecked S
             case .failed(let error):
                 self.logger.warning("Client \(endpointDesc) failed: \(error.localizedDescription)")
                 self.connections.removeValue(forKey: id)
+                self.onStatusChange?(.listening(port: self.boundPort, clientCount: self.connections.count))
                 connection.cancel()
             case .cancelled:
                 self.connections.removeValue(forKey: id)
+                self.onStatusChange?(.listening(port: self.boundPort, clientCount: self.connections.count))
                 self.logger.info("Client disconnected: \(endpointDesc) | active clients: \(self.connections.count)")
             default:
                 break

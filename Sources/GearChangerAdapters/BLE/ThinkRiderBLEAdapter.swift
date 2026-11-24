@@ -21,6 +21,16 @@ public struct ThinkRiderBLEConfiguration: Sendable {
     }
 }
 
+public enum BLEConnectionStatus: Sendable, Equatable {
+    case idle
+    case bluetoothOff
+    case unauthorized
+    case unsupported
+    case scanning
+    case connecting(String)
+    case connected(String)
+}
+
 /// CoreBluetooth input adapter for the ThinkRider VS200 virtual shifter.
 ///
 /// Runs all CoreBluetooth delegate callbacks on a dedicated serial DispatchQueue.
@@ -31,6 +41,7 @@ public final class ThinkRiderBLEAdapter: NSObject, ShiftInputPort, @unchecked Se
     private let config: ThinkRiderBLEConfiguration
     private let decoder = ThinkRiderVS200Decoder()
     private let logger: any LoggerPort
+    private let onStatusChange: (@Sendable (BLEConnectionStatus) -> Void)?
     private let queue = DispatchQueue(label: "com.gearchanger.ble.central")
 
     private var centralManager: CBCentralManager?
@@ -40,10 +51,12 @@ public final class ThinkRiderBLEAdapter: NSObject, ShiftInputPort, @unchecked Se
 
     public init(
         config: ThinkRiderBLEConfiguration = ThinkRiderBLEConfiguration(),
-        logger: any LoggerPort = ConsoleLogger()
+        logger: any LoggerPort = ConsoleLogger(),
+        onStatusChange: (@Sendable (BLEConnectionStatus) -> Void)? = nil
     ) {
         self.config = config
         self.logger = logger
+        self.onStatusChange = onStatusChange
         var capturedContinuation: AsyncStream<ShiftEvent>.Continuation!
         self.events = AsyncStream<ShiftEvent> { continuation in
             capturedContinuation = continuation
@@ -70,13 +83,27 @@ public final class ThinkRiderBLEAdapter: NSObject, ShiftInputPort, @unchecked Se
             }
             self.connectedPeripheral = nil
             self.centralManager = nil
+            self.onStatusChange?(.idle)
         }
         continuation.finish()
         logger.info("BLE adapter stopped.")
     }
 
+    public func reconnect() {
+        queue.async { [weak self] in
+            guard let self, !self.isStopped else { return }
+            if let peripheral = self.connectedPeripheral {
+                self.centralManager?.cancelPeripheralConnection(peripheral)
+                self.connectedPeripheral = nil
+            }
+            self.centralManager?.stopScan()
+            self.beginScanning()
+        }
+    }
+
     private func beginScanning() {
         guard !isStopped, let central = centralManager, central.state == .poweredOn else { return }
+        onStatusChange?(.scanning)
         if config.scanOnly {
             logger.info("Scanning for nearby BLE devices (looking for prefix '\(config.namePrefix)')...")
         } else {
@@ -96,12 +123,16 @@ extension ThinkRiderBLEAdapter: CBCentralManagerDelegate {
             logger.info("Bluetooth powered ON.")
             beginScanning()
         case .poweredOff:
+            onStatusChange?(.bluetoothOff)
             logger.warning("Bluetooth is powered OFF. Please enable Bluetooth in macOS Settings.")
         case .unauthorized:
+            onStatusChange?(.unauthorized)
             logger.error("Bluetooth permission denied. Grant Bluetooth access to your terminal in System Settings > Privacy & Security > Bluetooth.")
         case .unsupported:
+            onStatusChange?(.unsupported)
             logger.error("Bluetooth Low Energy is not supported on this hardware.")
         case .resetting:
+            onStatusChange?(.idle)
             logger.warning("Bluetooth is resetting...")
         case .unknown:
             logger.debug("Bluetooth state unknown...")
@@ -139,6 +170,7 @@ extension ThinkRiderBLEAdapter: CBCentralManagerDelegate {
             logger.info("Found ThinkRider device '\(localName)' (RSSI: \(RSSI)). Connecting...")
         }
 
+        onStatusChange?(.connecting(localName))
         central.stopScan()
         connectedPeripheral = peripheral
         peripheral.delegate = self
@@ -147,6 +179,7 @@ extension ThinkRiderBLEAdapter: CBCentralManagerDelegate {
 
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         let name = peripheral.name ?? peripheral.identifier.uuidString
+        onStatusChange?(.connected(name))
         logger.info("Connected to '\(name)'. Discovering GATT services...")
         peripheral.discoverServices(nil)
     }
