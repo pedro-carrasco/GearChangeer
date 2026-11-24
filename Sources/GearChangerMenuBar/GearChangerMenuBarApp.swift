@@ -90,11 +90,24 @@ private struct MenuBarContentView: View {
 
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            StatusRow(
-                title: L10n.string("section.ble.title"),
-                detail: viewModel.bleStatusTitle,
-                color: bleDotColor
-            )
+            HStack(alignment: .top) {
+                StatusRow(
+                    title: L10n.string("section.ble.title"),
+                    detail: viewModel.bleStatusTitle,
+                    color: bleDotColor
+                )
+                Spacer(minLength: 8)
+                if let level = viewModel.batteryLevel {
+                    HStack(spacing: 3) {
+                        Image(systemName: viewModel.batteryIconName)
+                            .foregroundStyle(batteryColor(for: level))
+                        Text("\(level)%")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                    .accessibilityLabel(L10n.format("ble.battery.accessibility", Int(level)))
+                }
+            }
             StatusRow(
                 title: L10n.string("section.server.title"),
                 detail: viewModel.serverStatusTitle,
@@ -204,6 +217,14 @@ private struct MenuBarContentView: View {
         case .listening: return .orange
         case .failed: return .red
         case .stopped: return .secondary
+        }
+    }
+
+    private func batteryColor(for level: UInt8) -> Color {
+        switch level {
+        case 0...20: return .red
+        case 21...40: return .orange
+        default: return .green
         }
     }
 }

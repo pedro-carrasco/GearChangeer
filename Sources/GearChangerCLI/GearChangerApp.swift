@@ -173,7 +173,15 @@ struct GearChangerApp {
                 scanOnly: false,
                 logRawPackets: options.logRawPackets
             )
-            let bleAdapter = ThinkRiderBLEAdapter(config: bleConfig, logger: logger)
+            let bleAdapter = ThinkRiderBLEAdapter(
+                config: bleConfig,
+                logger: logger
+            ) { _ in } onBatteryLevelChange: { level in
+                guard let level else { return }
+                Task {
+                    await server.sendDeviceStatus(batteryLevel: level, connectionState: .connectedReady)
+                }
+            }
             let bridge = ShiftBridge(input: bleAdapter, output: server, logger: logger)
             do {
                 try await bridge.start()

@@ -22,6 +22,7 @@ public final class OpenBikeControlTCPServer: BikeControlOutputPort, @unchecked S
 
     private var listener: NWListener?
     private var boundPort: UInt16 = 0
+    private var currentBatteryLevel: UInt8 = 100
     private var connections: [ObjectIdentifier: NWConnection] = [:]
     private var startContinuation: CheckedContinuation<Void, any Error>?
 
@@ -137,8 +138,12 @@ public final class OpenBikeControlTCPServer: BikeControlOutputPort, @unchecked S
         batteryLevel: UInt8,
         connectionState: OpenBikeControlConnectionState
     ) async {
+        let clamped = min(batteryLevel, 100)
+        queue.async { [weak self] in
+            self?.currentBatteryLevel = clamped
+        }
         let payload = codec.encodeDeviceStatus(
-            batteryLevel: batteryLevel,
+            batteryLevel: clamped,
             connectionState: connectionState
         )
         broadcast(payload)
@@ -155,7 +160,7 @@ public final class OpenBikeControlTCPServer: BikeControlOutputPort, @unchecked S
             case .ready:
                 self.onStatusChange?(.listening(port: self.boundPort, clientCount: self.connections.count))
                 self.logger.info("Client connected (MyWhoosh): \(endpointDesc) | active clients: \(self.connections.count)")
-                let status = self.codec.encodeDeviceStatus(batteryLevel: 100, connectionState: .connectedReady)
+                let status = self.codec.encodeDeviceStatus(batteryLevel: self.currentBatteryLevel, connectionState: .connectedReady)
                 self.send(status, to: connection)
                 self.receiveLoop(on: connection)
             case .failed(let error):
