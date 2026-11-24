@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show Swift & Xcode versions
+        run: |
+          swift --version
+          xcodebuild -version
+
+      - name: Run unit tests
+        run: swift test
+
+      - name: Build Xcode macOS app (Debug)
+        run: xcodebuild -project GearChanger.xcodeproj -scheme GearChanger -configuration Debug build

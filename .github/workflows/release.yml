@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show Swift & Xcode versions
+        run: |
+          swift --version
+          xcodebuild -version
+
+      - name: Run unit tests
+        run: swift test
+
+      - name: Build universal .app and release zip
+        env:
+          APP_VERSION: ${{ github.ref_name }}
+        run: |
+          CLEAN_VERSION="${APP_VERSION#v}"
+          APP_VERSION="${CLEAN_VERSION}" ./scripts/build-app.sh
+
+      - name: Generate SHA-256 checksum
+        run: |
+          cd dist
+          shasum -a 256 GearChanger-macOS-universal.zip > GearChanger-macOS-universal.zip.sha256
+          cat GearChanger-macOS-universal.zip.sha256
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/GearChanger-macOS-universal.zip \
+            dist/GearChanger-macOS-universal.zip.sha256 \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes
