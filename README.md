@@ -40,9 +40,9 @@ open GearChanger.xcodeproj
 
 Select the **`GearChanger`** scheme and press `Cmd+R`.
 
-### Packaging a Release `.app` from Terminal
+### Packaging a Universal Release `.app` and `.zip` from Terminal
 
-Build and ad-hoc sign `dist/GearChanger.app`, ready to launch or copy to `/Applications`:
+Build a **Universal Binary (`arm64` + `x86_64`)** `dist/GearChanger.app`, ad-hoc sign it, and package `dist/GearChanger-macOS-universal.zip` ready for GitHub Releases:
 
 ```bash
 ./scripts/build-app.sh
