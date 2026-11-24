@@ -104,3 +104,7 @@ swift build -c release
 - **OpenBikeControl (mDNS + TCP)**:
   - Bonjour service: `_openbikecontrol._tcp` with TXT records (`version=1`, `service-uuids=d273f680-d548-419d-b9d1-fa0472345229`, etc.).
   - Each VS200 notification is translated into a digital OpenBikeControl button pulse: `[0x01, buttonId, 0x01]` (press) followed by `[0x01, buttonId, 0x00]` (release) after 50 ms (`0x01` = Shift Up, `0x02` = Shift Down).
+
+## License
+
+Copyright 2026 Pedro Carrasco. Licensed under the [Apache License 2.0](LICENSE).
