@@ -17,6 +17,7 @@
 "ble.status.scanning" = "Scanning for ThinkRider VS200...";
 "ble.status.connecting" = "Connecting to %@...";
 "ble.status.connected" = "Connected (%@)";
+"ble.battery.accessibility" = "Battery level %d percent";
 
 /* OpenBikeControl Server Status */
 "server.status.stopped" = "Stopped";

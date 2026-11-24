@@ -37,11 +37,14 @@ public enum BLEConnectionStatus: Sendable, Equatable {
 public final class ThinkRiderBLEAdapter: NSObject, ShiftInputPort, @unchecked Sendable {
     public let events: AsyncStream<ShiftEvent>
 
+    private let batteryLevelUUID = CBUUID(string: BLEBatteryLevelDecoder.batteryLevelCharacteristicUUID)
     private let continuation: AsyncStream<ShiftEvent>.Continuation
     private let config: ThinkRiderBLEConfiguration
     private let decoder = ThinkRiderVS200Decoder()
+    private let batteryDecoder = BLEBatteryLevelDecoder()
     private let logger: any LoggerPort
     private let onStatusChange: (@Sendable (BLEConnectionStatus) -> Void)?
+    private let onBatteryLevelChange: (@Sendable (UInt8?) -> Void)?
     private let queue = DispatchQueue(label: "com.gearchanger.ble.central")
 
     private var centralManager: CBCentralManager?
@@ -52,11 +55,13 @@ public final class ThinkRiderBLEAdapter: NSObject, ShiftInputPort, @unchecked Se
     public init(
         config: ThinkRiderBLEConfiguration = ThinkRiderBLEConfiguration(),
         logger: any LoggerPort = ConsoleLogger(),
-        onStatusChange: (@Sendable (BLEConnectionStatus) -> Void)? = nil
+        onStatusChange: (@Sendable (BLEConnectionStatus) -> Void)? = nil,
+        onBatteryLevelChange: (@Sendable (UInt8?) -> Void)? = nil
     ) {
         self.config = config
         self.logger = logger
         self.onStatusChange = onStatusChange
+        self.onBatteryLevelChange = onBatteryLevelChange
         var capturedContinuation: AsyncStream<ShiftEvent>.Continuation!
         self.events = AsyncStream<ShiftEvent> { continuation in
             capturedContinuation = continuation
@@ -84,6 +89,7 @@ public final class ThinkRiderBLEAdapter: NSObject, ShiftInputPort, @unchecked Se
             self.connectedPeripheral = nil
             self.centralManager = nil
             self.onStatusChange?(.idle)
+            self.onBatteryLevelChange?(nil)
         }
         continuation.finish()
         logger.info("BLE adapter stopped.")
@@ -210,6 +216,7 @@ extension ThinkRiderBLEAdapter: CBCentralManagerDelegate {
             logger.info("Disconnected from '\(name)'.")
         }
         connectedPeripheral = nil
+        onBatteryLevelChange?(nil)
         if !isStopped {
             queue.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                 self?.beginScanning()
@@ -259,6 +266,19 @@ extension ThinkRiderBLEAdapter: CBPeripheralDelegate {
             }
 
             let canNotify = characteristic.properties.contains(.notify) || characteristic.properties.contains(.indicate)
+
+            if characteristic.uuid == batteryLevelUUID {
+                if characteristic.properties.contains(.read) {
+                    logger.debug("Reading battery level characteristic \(uuid)...")
+                    peripheral.readValue(for: characteristic)
+                }
+                if canNotify {
+                    logger.debug("Subscribing to battery level notifications on \(uuid)...")
+                    peripheral.setNotifyValue(true, for: characteristic)
+                }
+                continue
+            }
+
             guard canNotify else { continue }
 
             if let target = config.targetCharacteristicUUID,
@@ -296,6 +316,14 @@ extension ThinkRiderBLEAdapter: CBPeripheralDelegate {
             return
         }
         guard let data = characteristic.value, !data.isEmpty else { return }
+
+        if characteristic.uuid == batteryLevelUUID {
+            if let level = batteryDecoder.decode(data) {
+                logger.info("VS200 battery level: \(level)%")
+                onBatteryLevelChange?(level)
+            }
+            return
+        }
 
         if config.scanOnly || config.logRawPackets {
             logger.info("RX [\(characteristic.uuid.uuidString)] (\(data.count)B): \(data.hexString)")

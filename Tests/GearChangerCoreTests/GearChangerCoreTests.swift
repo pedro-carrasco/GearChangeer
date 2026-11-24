@@ -31,6 +31,28 @@ struct ThinkRiderVS200DecoderTests {
     }
 }
 
+@Suite("BLE Battery Level Decoder Tests")
+struct BLEBatteryLevelDecoderTests {
+    let decoder = BLEBatteryLevelDecoder()
+
+    @Test("Decodes standard 0x2A19 battery percentage byte")
+    func decodesBatteryLevel() {
+        #expect(decoder.decode(Data([0])) == 0)
+        #expect(decoder.decode(Data([85])) == 85)
+        #expect(decoder.decode(Data([100])) == 100)
+    }
+
+    @Test("Clamps values above 100 to 100")
+    func clampsAbove100() {
+        #expect(decoder.decode(Data([255])) == 100)
+    }
+
+    @Test("Returns nil for empty payload")
+    func returnsNilForEmptyData() {
+        #expect(decoder.decode(Data()) == nil)
+    }
+}
+
 @Suite("OpenBikeControl Codec Tests")
 struct OpenBikeControlCodecTests {
     let codec = OpenBikeControlCodec()

@@ -8,6 +8,7 @@ import Observation
 final class BridgeViewModel {
     private(set) var isRunning = false
     private(set) var bleStatus: BLEConnectionStatus = .idle
+    private(set) var batteryLevel: UInt8?
     private(set) var serverStatus: OpenBikeControlServerStatus = .stopped
     private(set) var lastShift: ShiftEvent?
     private(set) var shiftCount: Int = 0
@@ -46,6 +47,17 @@ final class BridgeViewModel {
         return false
     }
 
+    var batteryIconName: String {
+        guard let level = batteryLevel else { return "battery.0percent" }
+        switch level {
+        case 88...100: return "battery.100percent"
+        case 63..<88: return "battery.75percent"
+        case 38..<63: return "battery.50percent"
+        case 13..<38: return "battery.25percent"
+        default: return "battery.0percent"
+        }
+    }
+
     var serverStatusTitle: String {
         switch serverStatus {
         case .stopped:
@@ -73,20 +85,31 @@ final class BridgeViewModel {
 
         let logger = ConsoleLogger(verbose: false)
 
-        let ble = ThinkRiderBLEAdapter(
-            config: ThinkRiderBLEConfiguration(namePrefix: "Think VS"),
-            logger: logger
-        ) { [weak self] status in
-            Task { @MainActor [weak self] in
-                self?.bleStatus = status
-            }
-        }
-
         let server = OpenBikeControlTCPServer(logger: logger) { [weak self] status in
             Task { @MainActor [weak self] in
                 self?.serverStatus = status
             }
         }
+
+        let ble = ThinkRiderBLEAdapter(
+            config: ThinkRiderBLEConfiguration(namePrefix: "Think VS"),
+            logger: logger,
+            onStatusChange: { [weak self] status in
+                Task { @MainActor [weak self] in
+                    self?.bleStatus = status
+                }
+            },
+            onBatteryLevelChange: { [weak self] level in
+                Task { @MainActor [weak self] in
+                    self?.batteryLevel = level
+                }
+                if let level {
+                    Task {
+                        await server.sendDeviceStatus(batteryLevel: level, connectionState: .connectedReady)
+                    }
+                }
+            }
+        )
 
         let shiftBridge = ShiftBridge(
             input: ble,
@@ -124,6 +147,7 @@ final class BridgeViewModel {
         self.tcpServer = nil
         self.isRunning = false
         self.bleStatus = .idle
+        self.batteryLevel = nil
         self.serverStatus = .stopped
     }
 
