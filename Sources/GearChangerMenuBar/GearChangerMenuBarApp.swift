@@ -71,12 +71,12 @@ private struct MenuBarContentView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text("GearChanger")
                     .font(.headline)
-                Text("ThinkRider VS200 → MyWhoosh")
+                Text(L10n.string("app.subtitle"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Text(viewModel.isRunning ? "ACTIVO" : "PAUSA")
+            Text(L10n.string(viewModel.isRunning ? "status.badge.active" : "status.badge.paused"))
                 .font(.caption2.weight(.semibold))
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)
@@ -91,12 +91,12 @@ private struct MenuBarContentView: View {
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             StatusRow(
-                title: "ThinkRider VS200 (BLE)",
+                title: L10n.string("section.ble.title"),
                 detail: viewModel.bleStatusTitle,
                 color: bleDotColor
             )
             StatusRow(
-                title: "MyWhoosh (OpenBikeControl)",
+                title: L10n.string("section.server.title"),
                 detail: viewModel.serverStatusTitle,
                 color: serverDotColor
             )
@@ -106,17 +106,17 @@ private struct MenuBarContentView: View {
     private var shiftSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("Último cambio")
+                Text(L10n.string("section.last_shift.title"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
                 if let last = viewModel.lastShift {
-                    let label = last.action == .shiftUp ? "↑ Subir (+)" : "↓ Bajar (-)"
+                    let label = L10n.string(last.action == .shiftUp ? "shift.up" : "shift.down")
                     Text("\(label) · \(last.timestamp.formatted(date: .omitted, time: .standard))")
                         .font(.caption.monospacedDigit())
                         .fontWeight(.medium)
                 } else {
-                    Text("Sin cambios aún")
+                    Text(L10n.string("section.last_shift.none"))
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
@@ -126,7 +126,7 @@ private struct MenuBarContentView: View {
                 Button {
                     Task { await viewModel.simulateShift(.shiftDown) }
                 } label: {
-                    Label("Probar -", systemImage: "arrow.down.circle")
+                    Label(L10n.string("button.test_down"), systemImage: "arrow.down.circle")
                         .frame(maxWidth: .infinity)
                 }
                 .disabled(!viewModel.isRunning)
@@ -134,7 +134,7 @@ private struct MenuBarContentView: View {
                 Button {
                     Task { await viewModel.simulateShift(.shiftUp) }
                 } label: {
-                    Label("Probar +", systemImage: "arrow.up.circle")
+                    Label(L10n.string("button.test_up"), systemImage: "arrow.up.circle")
                         .frame(maxWidth: .infinity)
                 }
                 .disabled(!viewModel.isRunning)
@@ -157,7 +157,7 @@ private struct MenuBarContentView: View {
                     }
                 } label: {
                     Label(
-                        viewModel.isRunning ? "Detener" : "Iniciar",
+                        L10n.string(viewModel.isRunning ? "button.stop" : "button.start"),
                         systemImage: viewModel.isRunning ? "stop.fill" : "play.fill"
                     )
                     .frame(maxWidth: .infinity)
@@ -168,7 +168,7 @@ private struct MenuBarContentView: View {
                 Button {
                     viewModel.reconnectBLE()
                 } label: {
-                    Label("Reconectar", systemImage: "arrow.clockwise")
+                    Label(L10n.string("button.reconnect"), systemImage: "arrow.clockwise")
                 }
                 .buttonStyle(.bordered)
                 .disabled(!viewModel.isRunning)
@@ -180,7 +180,7 @@ private struct MenuBarContentView: View {
                     NSApplication.shared.terminate(nil)
                 }
             } label: {
-                Text("Salir de GearChanger")
+                Text(L10n.string("button.quit"))
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderless)

@@ -1,104 +1,106 @@
 # GearChanger
 
-Puente nativo para macOS escrito en **Swift 6** que conecta el mando de cambio virtual **ThinkRider VS200** por Bluetooth Low Energy (BLE) con **MyWhoosh** mediante el protocolo abierto **OpenBikeControl** (mDNS + TCP), sin dependencias externas.
+A native macOS bridge written in **Swift 6** that connects the **ThinkRider VS200** virtual shifter over Bluetooth Low Energy (BLE) to **MyWhoosh** using the open **OpenBikeControl** protocol (mDNS + TCP), with zero third-party dependencies.
 
-## Arquitectura
+Includes both a lightweight CLI and a native macOS menu bar app localized in **English (`en`)** and **Spanish (`es`)**.
 
-El proyecto sigue una arquitectura de **Puertos y Adaptadores (Hexagonal)** dividida en tres targets de Swift Package Manager:
+## Architecture
+
+The project follows a **Ports & Adapters (Hexagonal)** architecture organized into Swift Package Manager targets:
 
 ```text
 ┌──────────────────────────┐     ┌──────────────────────┐     ┌───────────────────────────────────┐
 │   GearChangerAdapters    │     │   GearChangerCore    │     │        GearChangerAdapters        │
 │  ThinkRiderBLEAdapter    │────▶│     ShiftBridge      │────▶│     OpenBikeControlTCPServer      │
-│  (CoreBluetooth / BLE)   │     │ (Dominio + Codecs)   │     │  (Network.framework mDNS + TCP)   │
+│  (CoreBluetooth / BLE)   │     │ (Domain + Codecs)    │     │  (Network.framework mDNS + TCP)   │
 └──────────────────────────┘     └──────────────────────┘     └───────────────────────────────────┘
 ```
 
-- **`GearChangerCore`**: dominio, puertos (`ShiftInputPort`, `BikeControlOutputPort`), decodificador de tramas ThinkRider VS200, codificador binario OpenBikeControl y orquestador `ShiftBridge` (con *debounce* y pulsos *press/release*). Sin dependencias del sistema operativo; 100 % testeable.
-- **`GearChangerAdapters`**: adaptadores nativos de macOS (`CoreBluetooth` para BLE, `Network.framework` para `_openbikecontrol._tcp`, y `StdinSimulatorAdapter` para pruebas sin hardware).
-- **`GearChangerCLI`**: ejecutable de línea de comandos con los modos `run`, `scan` y `simulate`.
-- **`GearChangerMenuBar`**: app nativa de macOS para la barra de menús (`SwiftUI MenuBarExtra`, sin icono en el Dock) con estado en vivo de BLE/MyWhoosh, botones de prueba y reconexión.
+- **`GearChangerCore`**: domain types, ports (`ShiftInputPort`, `BikeControlOutputPort`), ThinkRider VS200 packet decoder, OpenBikeControl binary codec, and the `ShiftBridge` actor (with debounce and press/release pulses). Zero OS dependencies; 100% unit-testable.
+- **`GearChangerAdapters`**: native macOS adapters (`CoreBluetooth` for BLE, `Network.framework` for `_openbikecontrol._tcp`, and `StdinSimulatorAdapter` for hardware-free testing).
+- **`GearChangerCLI`**: command-line executable with `run`, `scan`, and `simulate` modes.
+- **`GearChangerMenuBar` / `GearChanger.xcodeproj`**: native macOS menu bar app (`SwiftUI MenuBarExtra`, no Dock icon) showing live BLE & MyWhoosh status, test shift buttons, and reconnect controls.
 
-## App en la barra de menús (macOS)
+## Requirements
 
-### Desde Xcode (desarrollo y depuración con `Cmd+R`)
+- macOS 14 (Sonoma) or later
+- Swift 6.0 or later (Xcode / Command Line Tools)
+- **Bluetooth** and **Local Network** permissions granted to the app (or terminal when running the CLI)
+- **Important**: unpair the ThinkRider VS200 from your trainer before connecting it to your Mac, as the shifter only accepts one active BLE connection at a time
 
-Abre el proyecto Xcode (enlaza `GearChangerCore` y `GearChangerAdapters` desde el paquete local y usa [App/Info.plist](App/Info.plist)):
+## Menu Bar App (macOS)
+
+### Running from Xcode (`Cmd+R`)
+
+Open the Xcode project (links `GearChangerCore` and `GearChangerAdapters` from the local Swift package and uses [App/Info.plist](App/Info.plist)):
 
 ```bash
 open GearChanger.xcodeproj
 ```
 
-Selecciona el esquema **`GearChanger`** y pulsa `Cmd+R`.
+Select the **`GearChanger`** scheme and press `Cmd+R`.
 
-### Empaquetado Release desde terminal
+### Packaging a Release `.app` from Terminal
 
-Genera y firma el paquete `dist/GearChanger.app` listo para abrir con doble clic o mover a `/Applications`:
+Build and ad-hoc sign `dist/GearChanger.app`, ready to launch or copy to `/Applications`:
 
 ```bash
 ./scripts/build-app.sh
 open dist/GearChanger.app
 ```
 
-[App/Info.plist](App/Info.plist) incluye `LSUIElement=true` (solo barra de menús) y las declaraciones de permisos de **Bluetooth**, **Red local** y Bonjour (`_openbikecontrol._tcp`).
+[App/Info.plist](App/Info.plist) sets `LSUIElement=true` (menu bar only) and declares **Bluetooth**, **Local Network**, and Bonjour (`_openbikecontrol._tcp`) usage, localized via `en.lproj` and `es.lproj`.
 
-## Requisitos
+## CLI Usage
 
-- macOS 14 (Sonoma) o superior
-- Swift 6.0 o superior (Xcode / Command Line Tools)
-- Permisos de **Bluetooth** y **Red local** concedidos a la terminal desde la que se ejecute
-- **Importante**: el ThinkRider VS200 debe estar desemparejado del rodillo para poder conectarse al Mac, ya que solo admite una conexión BLE activa a la vez
-
-## Uso
-
-### 1. Probar la conexión con MyWhoosh (sin el VS200)
+### 1. Test MyWhoosh connection without the VS200
 
 ```bash
 swift run gearchanger simulate -v
 ```
 
-Abre **MyWhoosh** → **Conexiones** → **OpenBikeControl**, selecciona **`GearChanger VS200`** y envía `+` o `-` desde la terminal para verificar el cambio de marcha.
+Open **MyWhoosh** → **Connections** → **OpenBikeControl**, select **`GearChanger VS200`**, and type `+` or `-` in the terminal to verify virtual shifting.
 
-### 2. Inspeccionar el ThinkRider VS200 por BLE
+### 2. Inspect ThinkRider VS200 BLE packets
 
 ```bash
 swift run gearchanger scan -v
 ```
 
-Lista los dispositivos BLE cercanos, se conecta al dispositivo cuyo nombre coincida con el prefijo (`Think VS` por defecto) y muestra los servicios/características GATT y las tramas hexadecimales recibidas al pulsar los botones.
+Lists nearby BLE devices, connects to the device matching the name prefix (`Think VS` by default), and prints discovered GATT services/characteristics along with live hex payloads.
 
-### 3. Ejecutar el puente completo
+### 3. Run the full bridge
 
 ```bash
 swift run gearchanger run
 ```
 
-Opciones disponibles:
+Available flags:
 
-| Flag | Descripción |
+| Flag | Description |
 | :--- | :--- |
-| `--name-prefix <str>` | Prefijo de nombre BLE del mando (por defecto: `Think VS`) |
-| `--characteristic <uuid>` | Suscribirse únicamente a un UUID de característica GATT concreto |
-| `--port <uint16>` | Puerto TCP fijo para OpenBikeControl (por defecto: asignado por el SO) |
-| `--raw` | Mostrar en log las tramas hexadecimales crudas recibidas del VS200 |
-| `-v`, `--verbose` | Activar logs de depuración |
-| `-h`, `--help` | Mostrar ayuda |
+| `--name-prefix <str>` | BLE device name filter (default: `Think VS`) |
+| `--characteristic <uuid>` | Subscribe only to a specific GATT characteristic UUID |
+| `--port <uint16>` | Fixed TCP port for OpenBikeControl (default: OS-assigned ephemeral port) |
+| `--raw` | Log raw hex frames received from the VS200 |
+| `-v`, `--verbose` | Enable verbose debug logging |
+| `-h`, `--help` | Show help |
 
-### Compilación en modo Release y Tests
+### Tests & Release Build
 
 ```bash
-# Ejecutar tests unitarios
+# Run unit tests
 swift test
 
-# Compilar binario optimizado (.build/release/gearchanger)
+# Build optimized CLI binary (.build/release/gearchanger)
 swift build -c release
 ```
 
-## Notas de protocolo
+## Protocol Notes
 
-- **ThinkRider VS200 (BLE)**: envía tramas de 5 bytes con checksum aditivo de 8 bits en el último byte (`sum(bytes[0..<4]) & 0xFF`):
-  - Subir marcha: `f3 05 03 01 fc`
-  - Bajar marcha: `f3 05 03 00 fb`
+- **ThinkRider VS200 (BLE)**: sends 5-byte frames with an 8-bit additive checksum in the last byte (`sum(bytes[0..<4]) & 0xFF`):
+  - Shift Up: `f3 05 03 01 fc`
+  - Shift Down: `f3 05 03 00 fb`
 - **OpenBikeControl (mDNS + TCP)**:
-  - Servicio Bonjour: `_openbikecontrol._tcp` con registros TXT (`version=1`, `service-uuids=d273f680-d548-419d-b9d1-fa0472345229`, etc.).
-  - Cada pulsación del VS200 se traduce a un pulso digital OpenBikeControl: `[0x01, buttonId, 0x01]` (*press*) seguido de `[0x01, buttonId, 0x00]` (*release*) tras 50 ms (`0x01` = Shift Up, `0x02` = Shift Down).
+  - Bonjour service: `_openbikecontrol._tcp` with TXT records (`version=1`, `service-uuids=d273f680-d548-419d-b9d1-fa0472345229`, etc.).
+  - Each VS200 notification is translated into a digital OpenBikeControl button pulse: `[0x01, buttonId, 0x01]` (press) followed by `[0x01, buttonId, 0x00]` (release) after 50 ms (`0x01` = Shift Up, `0x02` = Shift Down).

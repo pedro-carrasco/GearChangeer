@@ -31,13 +31,13 @@ final class BridgeViewModel {
 
     var bleStatusTitle: String {
         switch bleStatus {
-        case .idle: return "Detenido"
-        case .bluetoothOff: return "Bluetooth apagado"
-        case .unauthorized: return "Sin permiso de Bluetooth"
-        case .unsupported: return "BLE no soportado"
-        case .scanning: return "Buscando ThinkRider VS200..."
-        case .connecting(let name): return "Conectando a \(name)..."
-        case .connected(let name): return "Conectado (\(name))"
+        case .idle: return L10n.string("ble.status.idle")
+        case .bluetoothOff: return L10n.string("ble.status.bluetooth_off")
+        case .unauthorized: return L10n.string("ble.status.unauthorized")
+        case .unsupported: return L10n.string("ble.status.unsupported")
+        case .scanning: return L10n.string("ble.status.scanning")
+        case .connecting(let name): return L10n.format("ble.status.connecting", name)
+        case .connected(let name): return L10n.format("ble.status.connected", name)
         }
     }
 
@@ -49,15 +49,16 @@ final class BridgeViewModel {
     var serverStatusTitle: String {
         switch serverStatus {
         case .stopped:
-            return "Detenido"
+            return L10n.string("server.status.stopped")
         case .listening(let port, let clients):
-            if clients > 0 {
-                let label = clients == 1 ? "1 cliente conectado" : "\(clients) clientes conectados"
-                return "Conectado — \(label) (:\(port))"
+            if clients == 1 {
+                return L10n.format("server.status.connected.one", UInt32(port))
+            } else if clients > 1 {
+                return L10n.format("server.status.connected.many", clients, UInt32(port))
             }
-            return "Esperando a MyWhoosh (:\(port))"
+            return L10n.format("server.status.waiting", UInt32(port))
         case .failed(let reason):
-            return "Error: \(reason)"
+            return L10n.format("server.status.failed", reason)
         }
     }
 

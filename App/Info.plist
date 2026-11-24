@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>es</string>
+	<string>en</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -23,9 +23,9 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>GearChanger necesita acceso a Bluetooth para conectarse a tu mando ThinkRider VS200 y leer los cambios de marcha.</string>
+	<string>GearChanger needs Bluetooth access to connect to your ThinkRider VS200 shifter and read gear shifts.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>GearChanger necesita acceso a la red local para anunciar el servicio OpenBikeControl y conectarse con MyWhoosh.</string>
+	<string>GearChanger needs Local Network access to advertise the OpenBikeControl service and connect to MyWhoosh.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_openbikecontrol._tcp</string>

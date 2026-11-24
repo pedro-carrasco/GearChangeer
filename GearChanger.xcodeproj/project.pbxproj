@@ -11,6 +11,9 @@
 		A10000010000000000000002 /* GearChangerMenuBarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000003 /* GearChangerMenuBarApp.swift */; };
 		A10000010000000000000003 /* GearChangerCore in Frameworks */ = {isa = PBXBuildFile; productRef = A80000010000000000000001 /* GearChangerCore */; };
 		A10000010000000000000004 /* GearChangerAdapters in Frameworks */ = {isa = PBXBuildFile; productRef = A80000010000000000000002 /* GearChangerAdapters */; };
+		A10000010000000000000005 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000005 /* Localization.swift */; };
+		A10000010000000000000006 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A40000010000000000000010 /* Localizable.strings */; };
+		A10000010000000000000007 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A40000010000000000000011 /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,6 +21,11 @@
 		A20000010000000000000002 /* BridgeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/GearChangerMenuBar/BridgeViewModel.swift; sourceTree = "<group>"; };
 		A20000010000000000000003 /* GearChangerMenuBarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/GearChangerMenuBar/GearChangerMenuBarApp.swift; sourceTree = "<group>"; };
 		A20000010000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = App/Info.plist; sourceTree = "<group>"; };
+		A20000010000000000000005 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/GearChangerMenuBar/Localization.swift; sourceTree = "<group>"; };
+		A20000010000000000000010 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Sources/GearChangerMenuBar/Resources/en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A20000010000000000000011 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = Sources/GearChangerMenuBar/Resources/es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A20000010000000000000012 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Sources/GearChangerMenuBar/Resources/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		A20000010000000000000013 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = Sources/GearChangerMenuBar/Resources/es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,7 +54,10 @@
 			children = (
 				A20000010000000000000003 /* GearChangerMenuBarApp.swift */,
 				A20000010000000000000002 /* BridgeViewModel.swift */,
+				A20000010000000000000005 /* Localization.swift */,
 				A20000010000000000000004 /* Info.plist */,
+				A40000010000000000000010 /* Localizable.strings */,
+				A40000010000000000000011 /* InfoPlist.strings */,
 			);
 			name = App;
 			sourceTree = "<group>";
@@ -68,6 +79,7 @@
 			buildPhases = (
 				A30000010000000000000002 /* Sources */,
 				A30000010000000000000001 /* Frameworks */,
+				A30000010000000000000003 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -99,11 +111,11 @@
 			};
 			buildConfigurationList = A60000010000000000000001 /* Build configuration list for PBXProject "GearChanger" */;
 			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = es;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				es,
 				en,
+				es,
 				Base,
 			);
 			mainGroup = A40000010000000000000001;
@@ -119,6 +131,18 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		A30000010000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000010000000000000006 /* Localizable.strings in Resources */,
+				A10000010000000000000007 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		A30000010000000000000002 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -126,10 +150,32 @@
 			files = (
 				A10000010000000000000001 /* BridgeViewModel.swift in Sources */,
 				A10000010000000000000002 /* GearChangerMenuBarApp.swift in Sources */,
+				A10000010000000000000005 /* Localization.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		A40000010000000000000010 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A20000010000000000000010 /* en */,
+				A20000010000000000000011 /* es */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		A40000010000000000000011 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A20000010000000000000012 /* en */,
+				A20000010000000000000013 /* es */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		B10000010000000000000001 /* Debug */ = {

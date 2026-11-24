@@ -1,0 +1,38 @@
+/* Header */
+"app.subtitle" = "ThinkRider VS200 → MyWhoosh";
+"status.badge.active" = "ACTIVO";
+"status.badge.paused" = "PAUSA";
+
+/* Sections */
+"section.ble.title" = "ThinkRider VS200 (BLE)";
+"section.server.title" = "MyWhoosh (OpenBikeControl)";
+"section.last_shift.title" = "Último cambio";
+"section.last_shift.none" = "Sin cambios aún";
+
+/* BLE Status */
+"ble.status.idle" = "Detenido";
+"ble.status.bluetooth_off" = "Bluetooth apagado";
+"ble.status.unauthorized" = "Sin permiso de Bluetooth";
+"ble.status.unsupported" = "BLE no soportado";
+"ble.status.scanning" = "Buscando ThinkRider VS200...";
+"ble.status.connecting" = "Conectando a %@...";
+"ble.status.connected" = "Conectado (%@)";
+
+/* OpenBikeControl Server Status */
+"server.status.stopped" = "Detenido";
+"server.status.waiting" = "Esperando a MyWhoosh (:%u)";
+"server.status.connected.one" = "Conectado — 1 cliente (:%u)";
+"server.status.connected.many" = "Conectado — %d clientes (:%u)";
+"server.status.failed" = "Error: %@";
+
+/* Shift Actions */
+"shift.up" = "↑ Subir (+)";
+"shift.down" = "↓ Bajar (-)";
+
+/* Controls */
+"button.test_down" = "Probar -";
+"button.test_up" = "Probar +";
+"button.start" = "Iniciar";
+"button.stop" = "Detener";
+"button.reconnect" = "Reconectar";
+"button.quit" = "Salir de GearChanger";

@@ -1,0 +1,2 @@
+"NSBluetoothAlwaysUsageDescription" = "GearChanger needs Bluetooth access to connect to your ThinkRider VS200 shifter and read gear shifts.";
+"NSLocalNetworkUsageDescription" = "GearChanger needs Local Network access to advertise the OpenBikeControl service and connect to MyWhoosh.";

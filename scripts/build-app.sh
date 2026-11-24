@@ -6,6 +6,7 @@ APP_NAME="GearChanger"
 APP_BUNDLE="${ROOT_DIR}/dist/${APP_NAME}.app"
 CONTENTS_DIR="${APP_BUNDLE}/Contents"
 MACOS_DIR="${CONTENTS_DIR}/MacOS"
+RESOURCES_DIR="${CONTENTS_DIR}/Resources"
 
 echo "==> Building GearChangerMenuBar (release)..."
 cd "${ROOT_DIR}"
@@ -15,9 +16,12 @@ BIN_PATH="$(swift build -c release --show-bin-path)/GearChangerMenuBar"
 
 echo "==> Creating ${APP_BUNDLE}..."
 rm -rf "${APP_BUNDLE}"
-mkdir -p "${MACOS_DIR}"
+mkdir -p "${MACOS_DIR}" "${RESOURCES_DIR}"
 cp "${BIN_PATH}" "${MACOS_DIR}/${APP_NAME}"
 chmod +x "${MACOS_DIR}/${APP_NAME}"
+
+cp -R "${ROOT_DIR}/Sources/GearChangerMenuBar/Resources/en.lproj" "${RESOURCES_DIR}/"
+cp -R "${ROOT_DIR}/Sources/GearChangerMenuBar/Resources/es.lproj" "${RESOURCES_DIR}/"
 
 sed \
     -e "s|\$(EXECUTABLE_NAME)|${APP_NAME}|g" \

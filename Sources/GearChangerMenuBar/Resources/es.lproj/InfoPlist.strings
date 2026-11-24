@@ -1,0 +1,2 @@
+"NSBluetoothAlwaysUsageDescription" = "GearChanger necesita acceso a Bluetooth para conectarse a tu mando ThinkRider VS200 y leer los cambios de marcha.";
+"NSLocalNetworkUsageDescription" = "GearChanger necesita acceso a la red local para anunciar el servicio OpenBikeControl y conectarse con MyWhoosh.";

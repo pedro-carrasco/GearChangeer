@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "GearChanger",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v14)
     ],
@@ -31,7 +32,10 @@ let package = Package(
         .executableTarget(
             name: "GearChangerMenuBar",
             dependencies: ["GearChangerCore", "GearChangerAdapters"],
-            path: "Sources/GearChangerMenuBar"
+            path: "Sources/GearChangerMenuBar",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "GearChangerCoreTests",
