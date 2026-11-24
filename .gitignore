@@ -6,9 +6,10 @@ Package.pins
 Package.resolved
 
 # Xcode
-*.xcodeproj
-*.xcworkspace
 xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xccheckout
+*.moved-aside
 DerivedData/
 
 # macOS

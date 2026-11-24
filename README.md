@@ -21,6 +21,18 @@ El proyecto sigue una arquitectura de **Puertos y Adaptadores (Hexagonal)** divi
 
 ## App en la barra de menús (macOS)
 
+### Desde Xcode (desarrollo y depuración con `Cmd+R`)
+
+Abre el proyecto Xcode (enlaza `GearChangerCore` y `GearChangerAdapters` desde el paquete local y usa [App/Info.plist](App/Info.plist)):
+
+```bash
+open GearChanger.xcodeproj
+```
+
+Selecciona el esquema **`GearChanger`** y pulsa `Cmd+R`.
+
+### Empaquetado Release desde terminal
+
 Genera y firma el paquete `dist/GearChanger.app` listo para abrir con doble clic o mover a `/Applications`:
 
 ```bash
@@ -28,7 +40,7 @@ Genera y firma el paquete `dist/GearChanger.app` listo para abrir con doble clic
 open dist/GearChanger.app
 ```
 
-El `Info.plist` del paquete incluye automáticamente `LSUIElement=true` (solo barra de menús) y las declaraciones de permisos de **Bluetooth**, **Red local** y Bonjour (`_openbikecontrol._tcp`).
+[App/Info.plist](App/Info.plist) incluye `LSUIElement=true` (solo barra de menús) y las declaraciones de permisos de **Bluetooth**, **Red local** y Bonjour (`_openbikecontrol._tcp`).
 
 ## Requisitos
 

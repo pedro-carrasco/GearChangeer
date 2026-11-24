@@ -19,42 +19,11 @@ mkdir -p "${MACOS_DIR}"
 cp "${BIN_PATH}" "${MACOS_DIR}/${APP_NAME}"
 chmod +x "${MACOS_DIR}/${APP_NAME}"
 
-cat > "${CONTENTS_DIR}/Info.plist" <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleDevelopmentRegion</key>
-    <string>es</string>
-    <key>CFBundleExecutable</key>
-    <string>GearChanger</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.gearchanger.menubar</string>
-    <key>CFBundleInfoDictionaryVersion</key>
-    <string>6.0</string>
-    <key>CFBundleName</key>
-    <string>GearChanger</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
-    <key>CFBundleVersion</key>
-    <string>1</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>14.0</string>
-    <key>LSUIElement</key>
-    <true/>
-    <key>NSBluetoothAlwaysUsageDescription</key>
-    <string>GearChanger necesita acceso a Bluetooth para conectarse a tu mando ThinkRider VS200 y leer los cambios de marcha.</string>
-    <key>NSLocalNetworkUsageDescription</key>
-    <string>GearChanger necesita acceso a la red local para anunciar el servicio OpenBikeControl y conectarse con MyWhoosh.</string>
-    <key>NSBonjourServices</key>
-    <array>
-        <string>_openbikecontrol._tcp</string>
-    </array>
-</dict>
-</plist>
-PLIST
+sed \
+    -e "s|\$(EXECUTABLE_NAME)|${APP_NAME}|g" \
+    -e "s|\$(PRODUCT_BUNDLE_IDENTIFIER)|com.gearchanger.menubar|g" \
+    -e "s|\$(PRODUCT_NAME)|${APP_NAME}|g" \
+    "${ROOT_DIR}/App/Info.plist" > "${CONTENTS_DIR}/Info.plist"
 
 echo "==> Ad-hoc signing ${APP_BUNDLE}..."
 codesign --force --deep --sign - "${APP_BUNDLE}"
