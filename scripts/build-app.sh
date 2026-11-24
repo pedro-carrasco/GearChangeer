@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 APP_NAME="GearChanger"
+APP_VERSION="${APP_VERSION:-1.0.0}"
 DIST_DIR="${ROOT_DIR}/dist"
 APP_BUNDLE="${DIST_DIR}/${APP_NAME}.app"
 ZIP_PATH="${DIST_DIR}/${APP_NAME}-macOS-universal.zip"
@@ -30,6 +31,8 @@ sed \
     -e "s|\$(PRODUCT_BUNDLE_IDENTIFIER)|com.gearchanger.menubar|g" \
     -e "s|\$(PRODUCT_NAME)|${APP_NAME}|g" \
     "${ROOT_DIR}/App/Info.plist" > "${CONTENTS_DIR}/Info.plist"
+
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${APP_VERSION}" "${CONTENTS_DIR}/Info.plist"
 
 echo "==> Ad-hoc signing ${APP_BUNDLE}..."
 codesign --force --deep --sign - "${APP_BUNDLE}"
